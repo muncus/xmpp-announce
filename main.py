@@ -22,6 +22,9 @@ class MainHandler(webapp.RequestHandler):
     def get(self):
         self.response.out.write('Hello world!')
 
+    def listChannels(self):
+      pass
+
 
 def main():
     application = webapp.WSGIApplication([('/', MainHandler)],

@@ -1,5 +1,5 @@
-application: new-project-template
-version: 1
+application: muncus
+version: 2-announce
 runtime: python
 api_version: 1
 
@@ -16,4 +16,5 @@ handlers:
   #login: admin
 - url: .*
   script: main.py
+  #login: required
 

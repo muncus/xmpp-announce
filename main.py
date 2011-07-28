@@ -107,6 +107,7 @@ class SubscribeHandler(webapp.RequestHandler):
     
     if not self.request.get('channel'):
       self.response.set_status(400, "WHUT??")
+
     chanobj = models.Channel.gql("WHERE name = :1", self.request.get('channel')).get()
     current_user = users.get_current_user()
     sub = models.ChannelSubscription.gql("WHERE user = :1", current_user).get()
@@ -117,9 +118,10 @@ class SubscribeHandler(webapp.RequestHandler):
       return
     else:
       sub = models.ChannelSubscription(
-          user=users.get_current_user(),
+          user=current_user,
           enabled=True,
           parent=chanobj.key())
+      sub.put()
       xmpp.send_invite(sub.user.email())
       self.response.set_status(200, "ok")
       self.response.out.write('invitation sent.')
@@ -127,7 +129,7 @@ class SubscribeHandler(webapp.RequestHandler):
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
-        self.response.out.write('Hello world!')
+        self.redirect('/channels')
 
 
 def main():

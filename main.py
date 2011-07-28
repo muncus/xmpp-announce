@@ -18,6 +18,7 @@ from google.appengine.api import users
 from google.appengine.api import xmpp
 
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import util
 
 import logging
@@ -32,7 +33,7 @@ class ChannelHandler(webapp.RequestHandler):
     subscriptions = models.ChannelSubscription.gql("WHERE ANCESTOR IS :1", chanobj.key())
     for sub in subscriptions:
       if xmpp.get_presence(sub.user.email()):
-      xmpp.send_message(sub.user.email(), message)
+        xmpp.send_message(sub.user.email(), message)
       else:
         logging.info("user not online: %s" % sub.user.email())
 
@@ -54,6 +55,19 @@ class ChannelHandler(webapp.RequestHandler):
       logging.info("attempting to notify users.")
       self.notifyChannel(channel, 
                          self.formatChannelMessage(channel, self.request.get('message', None)))
+      self.response.set_status(200, "Ok")
+      self.response.out.write("notification sent.")
+      return
+    if self.request.path == '/channel':
+      #adding a new channel.
+      self.response.out.write(template.render('templates/create_channel.html', None))
+      return
+    if self.request.path == '/channels':
+      chans = models.Channel.all()
+      self.response.out.write(template.render('templates/channel_list.html', {
+          'channels': chans}
+          ))
+      return
     else:
       self.response.set_status(400, "User Error")
       self.response.out.write("huh?")
@@ -79,10 +93,13 @@ class SubscribeHandler(webapp.RequestHandler):
     if not self.request.get('channel'):
       self.response.set_status(400, "WHUT??")
     chanobj = models.Channel.gql("WHERE name = :1", self.request.get('channel')).get()
-    sub = models.ChannelSubscription(parent=chanobj.key())
-    sub.user = users.get_current_user()
-    sub.enabled = True
-    sub.put()
+    sub = models.ChannelSubscription.get_or_insert(
+        user=users.get_current_user(),
+        enabled=True,
+        parent=chanobj.key())
+    self.response.set_status(200, "ok")
+    self.response.out.write('subscribed.')
+    
 
 class MainHandler(webapp.RequestHandler):
     def get(self):

@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <h3>Known Channels</h3>
+    <ul>
+    {% for channel in channels %}
+      <div>{{ channel.name }} <a href="/subscribe?channel={{ channel.name }}">Subscribe</a></div>
+    {% endfor %}
+    </ul>
+  </body>
+</html>

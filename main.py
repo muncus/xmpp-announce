@@ -95,7 +95,7 @@ class ChannelHandler(webapp.RequestHandler):
       sub.user = chan.creator
       sub.enabled = True
       sub.put()
-      self.response.out.write('but you were not subscribed.')
+      self.response.out.write(' You have been subscribed.')
 
 
 class SubscribeHandler(webapp.RequestHandler):

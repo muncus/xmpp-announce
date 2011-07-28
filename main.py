@@ -32,8 +32,14 @@ class ChannelHandler(webapp.RequestHandler):
     chanobj = models.Channel.gql("WHERE name = :1", channel).get()
     subscriptions = models.ChannelSubscription.gql("WHERE ANCESTOR IS :1", chanobj.key())
     for sub in subscriptions:
+      if not sub.user:
+        logging.warning("odd. sub.user has no value?")
+        continue
       if xmpp.get_presence(sub.user.email()):
-        xmpp.send_message(sub.user.email(), message)
+        status_code = xmpp.send_message(sub.user.email(), message)
+        if status_code != xmpp.NO_ERROR:
+          logging.error("Did not send message!")
+          logging.error(status_code)
       else:
         logging.info("user not online: %s" % sub.user.email())
 
@@ -74,39 +80,54 @@ class ChannelHandler(webapp.RequestHandler):
 
   def post(self):
     #create new channel.
+    if not users.get_current_user():
+      self.redirect(users.create_login_url(self.request.uri))
+      return
     chan = models.Channel(name=self.request.get('name'))
     chan.description = self.request.get('description', '')
     chan.creator = users.get_current_user()
     chan.put()
-    # auto-subscribe the creator
-    sub = models.ChannelSubscription(parent=chan.key())
-    sub.user = chan.creator
-    sub.enabled = True
-    sub.put()
     self.response.set_status(200, "channel created.")
     self.response.out.write('channel created.')
+    if chan.creator:
+      # auto-subscribe the creator
+      sub = models.ChannelSubscription(parent=chan.key())
+      sub.user = chan.creator
+      sub.enabled = True
+      sub.put()
+      self.response.out.write('but you were not subscribed.')
 
 
 class SubscribeHandler(webapp.RequestHandler):
   """Subscription changes."""
   def get(self):
+    if not users.get_current_user():
+      self.redirect(users.create_login_url(self.request.uri))
+      return
+    
     if not self.request.get('channel'):
       self.response.set_status(400, "WHUT??")
     chanobj = models.Channel.gql("WHERE name = :1", self.request.get('channel')).get()
-    sub = models.ChannelSubscription.get_or_insert(
-        user=users.get_current_user(),
-        enabled=True,
-        parent=chanobj.key())
-    self.response.set_status(200, "ok")
-    self.response.out.write('subscribed.')
+    current_user = users.get_current_user()
+    sub = models.ChannelSubscription.gql("WHERE user = :1", current_user).get()
+    if sub and sub.user:
+      xmpp.send_invite(sub.user.email())
+      self.response.set_status(200, "ok")
+      self.response.out.write('already subscribed.')
+      return
+    else:
+      sub = models.ChannelSubscription(
+          user=users.get_current_user(),
+          enabled=True,
+          parent=chanobj.key())
+      xmpp.send_invite(sub.user.email())
+      self.response.set_status(200, "ok")
+      self.response.out.write('invitation sent.')
     
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
         self.response.out.write('Hello world!')
-
-    def listChannels(self):
-      pass
 
 
 def main():

@@ -79,23 +79,39 @@ class ChannelHandler(webapp.RequestHandler):
       self.response.out.write("huh?")
 
   def post(self):
-    #create new channel.
     if not users.get_current_user():
       self.redirect(users.create_login_url(self.request.uri))
       return
-    chan = models.Channel(name=self.request.get('name'))
-    chan.description = self.request.get('description', '')
-    chan.creator = users.get_current_user()
-    chan.put()
-    self.response.set_status(200, "channel created.")
-    self.response.out.write('channel created.')
-    if chan.creator:
-      # auto-subscribe the creator
-      sub = models.ChannelSubscription(parent=chan.key())
-      sub.user = chan.creator
-      sub.enabled = True
-      sub.put()
-      self.response.out.write(' You have been subscribed.')
+    channel = self.request.get('channel')
+    if not channel:
+      self.response.set_status(400, "User Error")
+      self.response.out.write("you must specify a channel name.")
+      return
+    if self.request.path == '/channel/notify':
+      logging.info("attempting to notify users.")
+      self.notifyChannel(channel, 
+                         self.formatChannelMessage(channel, self.request.get('message', None)))
+      self.response.set_status(200, "Ok")
+      self.response.out.write("notification sent.")
+
+    else if self.request.path == '/channel':
+      #create new channel.
+      chan = models.Channel(name=self.request.get('name'))
+      chan.description = self.request.get('description', '')
+      chan.creator = users.get_current_user()
+      chan.put()
+      self.response.set_status(200, "channel created.")
+      self.response.out.write('channel created.')
+      if chan.creator:
+        # auto-subscribe the creator
+        sub = models.ChannelSubscription(parent=chan.key())
+        sub.user = chan.creator
+        sub.enabled = True
+        sub.put()
+        self.response.out.write(' You have been subscribed.')
+    else:
+      self.response.set_status(400, "user error")
+      self.response.out.write("improper url path.")
 
 
 class SubscribeHandler(webapp.RequestHandler):

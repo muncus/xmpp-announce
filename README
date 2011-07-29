@@ -1,0 +1,9 @@
+xmpp-announce - Appengine app for subscription announcements.
+====
+
+Purpose:
+
+Channel-based subscription to xmpp messages. Users can create topic-based channels, to which other users may subscribe.
+When a notification is triggered (currently by hitting a URL), all subscribed users receive a message via xmpp.
+
+The inspiration for this app was coordinating a coffee break, with several people throughout the office.

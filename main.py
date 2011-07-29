@@ -107,10 +107,14 @@ class SubscribeHandler(webapp.RequestHandler):
     
     if not self.request.get('channel'):
       self.response.set_status(400, "WHUT??")
+      return
 
-    chanobj = models.Channel.gql("WHERE name = :1", self.request.get('channel')).get()
     current_user = users.get_current_user()
-    sub = models.ChannelSubscription.gql("WHERE user = :1", current_user).get()
+    chanobj = models.Channel.gql("WHERE name = :1", self.request.get('channel')).get()
+    if not chanobj:
+      self.response.set_status(400, "WHUT??")
+      return
+    sub = models.ChannelSubscription.gql("WHERE ANCESTOR IS :1 AND user = :2", chanobj.key(), current_user).get()
     if sub and sub.user:
       xmpp.send_invite(sub.user.email())
       self.response.set_status(200, "ok")

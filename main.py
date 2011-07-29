@@ -94,7 +94,7 @@ class ChannelHandler(webapp.RequestHandler):
       self.response.set_status(200, "Ok")
       self.response.out.write("notification sent.")
 
-    else if self.request.path == '/channel':
+    elif self.request.path == '/channel':
       #create new channel.
       chan = models.Channel(name=self.request.get('name'))
       chan.description = self.request.get('description', '')

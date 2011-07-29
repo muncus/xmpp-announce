@@ -3,10 +3,13 @@
     <h3>Known Channels</h3>
     <ul>
     {% for channel in channels %}
-      <div>{{ channel.name }} 
+      <form action="/channel/notify">
+      <div><strong>{{ channel.name }}</strong>
           <a href="/subscribe?channel={{ channel.name }}">Subscribe</a>
-          <a href="/channel/notify?channel={{ channel.name }}">ping</a>
+            <input type="hidden" name="channel" value="{{ channel.name }}">
+            <input type="submit" value="Notify Channel">
       </div>
+      </form>
     {% endfor %}
     </ul>
 

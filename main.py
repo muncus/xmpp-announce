@@ -49,6 +49,8 @@ class ChannelHandler(webapp.RequestHandler):
       message = "%s time!" % channel
     if users.get_current_user():
       return "%s says: %s" % (users.get_current_user(), message)
+    else:
+      return "someone says: %s" % message
 
   def get(self):
     channel = self.request.get('channel')
@@ -87,8 +89,10 @@ class ChannelHandler(webapp.RequestHandler):
       return
     if self.request.path == '/channel/notify':
       logging.info("attempting to notify users.")
-      self.notifyChannel(channel, 
-                         self.formatChannelMessage(channel, self.request.get('message', None)))
+      message = self.formatChannelMessage(channel, self.request.get('message', None)
+      if not message:
+        logging.warning("No message returned from formatChannelMessage.")
+      self.notifyChannel(channel, message)
       self.response.set_status(200, "Ok")
       self.response.out.write("notification sent.")
 

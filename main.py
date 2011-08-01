@@ -89,9 +89,11 @@ class ChannelHandler(webapp.RequestHandler):
       return
     if self.request.path == '/channel/notify':
       logging.info("attempting to notify users.")
-      message = self.formatChannelMessage(channel, self.request.get('message', None)
+      message = self.formatChannelMessage(channel, self.request.get('message', None))
       if not message:
         logging.warning("No message returned from formatChannelMessage.")
+      else: 
+        logging.info(message)
       self.notifyChannel(channel, message)
       self.response.set_status(200, "Ok")
       self.response.out.write("notification sent.")

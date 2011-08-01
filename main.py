@@ -40,6 +40,8 @@ class ChannelHandler(webapp.RequestHandler):
         if status_code != xmpp.NO_ERROR:
           logging.error("Did not send message!")
           logging.error(status_code)
+        else: 
+          logging.info("sent message to %s: %s", sub.user.email(), message)
       else:
         logging.info("user not online: %s" % sub.user.email())
 

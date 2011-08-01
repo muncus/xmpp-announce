@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <h3>Notify Channel: {{ channel.name }}</h3>
+    <form action="/channel/notify" method="post">
+      <input type="hidden" name="channel" value="{{ channel.name }}">
+      <div>Message: <textarea name="message" rows="2" cols="60"></textarea></div>
+      <div><input type="submit" value="Notify"></div>
+    </form>
+  </body>
+</html>

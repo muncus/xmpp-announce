@@ -51,19 +51,17 @@ class ChannelHandler(webapp.RequestHandler):
       return "%s says: %s" % (users.get_current_user(), message)
 
   def get(self):
-    logging.info("in channel handler.")
     channel = self.request.get('channel')
     if self.request.path == '/channel/notify':
       if not channel:
         self.response.set_status(400, "User Error")
         self.response.out.write("you must specify a channel name.")
         return
-      logging.info("attempting to notify users.")
-      self.notifyChannel(channel, 
-                         self.formatChannelMessage(channel, self.request.get('message', None)))
-      self.response.set_status(200, "Ok")
-      self.response.out.write("notification sent.")
+
+      chan = models.Channel(name=channel)
+      self.response.out.write(template.render('templates/notify.html', {'channel': chan}))
       return
+
     if self.request.path == '/channel':
       #adding a new channel.
       self.response.out.write(template.render('templates/create_channel.html', None))
